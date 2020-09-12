@@ -1,0 +1,5 @@
+[master]
+rbp1 ansible_host=192.168.10.118
+
+[nodes]
+rbp2 ansible_host=192.168.10.119

@@ -1,0 +1,3 @@
+---
+# defaults file for roles/setup-master
+network: 172.168.10.0

@@ -1,0 +1,122 @@
+---
+# tasks file for roles/hardenize-node
+
+- name: Add IP address of all hosts to all hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '.*{{ item }}$'
+    line: "{{ hostvars[item].ansible_host }} {{item}}"
+    state: present
+  when: hostvars[item].ansible_host is defined
+  with_items: "{{ groups.all }}"
+
+
+- name: Delete root pw file /root/.pw (if present)
+  file:
+    path: /root/.pw
+    state: absent
+
+- name: Set Hostname
+  hostname: 
+    name: "{{ inventory_hostname }}"
+
+- name: Install openntpd/ntp package if requested
+  apt:
+    state: present
+    pkg: "{{ harden_linux_ntp }}"
+  retries: 2
+  delay: 5
+  when: harden_linux_ntp is defined
+
+- name: Set NTP config directory (depends on selected NTP package)
+  set_fact:
+    harden_linux_ntp_config_directory: '{% if harden_linux_ntp == "openntpd" %}openntpd/{% else %}{% endif %}'
+  when: harden_linux_ntp is defined
+
+- name: Add ntpd.conf if requested
+  lineinfile:
+    dest: "/etc/{{ harden_linux_ntp_config_directory }}ntpd.conf"
+    regexp: "{{ item }}"
+    line: "{{ harden_linux_ntp_settings[item] }}"
+    state: "present"
+  notify: "restart ntpd"
+  when: harden_linux_ntp is defined
+  with_items:
+    - "{{ harden_linux_ntp_settings | list }}"
+
+- name: Ensure sshd_config setting
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: "{{ item }}"
+    line: "{{ harden_linux_sshd_settings[item] }}"
+    state: "present"
+  notify: "restart ssh"
+  with_items:
+    - "{{ harden_linux_sshd_settings | list }}"
+
+- name: Update APT package cache
+  apt:
+    update_cache: true
+
+- name: Install aptitude
+  apt:
+    pkg: aptitude
+    state: present
+
+- name: Upgrade APT to the latest packages
+  apt:
+    upgrade: safe
+
+- name: Install Packages
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg-agent
+    - software-properties-common
+    - docker.io
+  notify: 
+    - Enable Docker
+    - Enable Docker Service
+
+- name: Enable CGROUP Memory
+  copy:
+    src: cmdline.txt
+    dest: /boot/firmware/cmdline.txt
+    owner: root
+    group: root
+    mode: 0644
+  register: cmdline
+
+- name: Reboot if /boot/firmware/cmdline.txt changed
+  reboot:
+    msg: "Reboot initiated by Ansible"
+  when: cmdline.changed
+
+- name: Add an apt signing key for Kubernetes
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+  
+- name: Adding apt repository for Kubernetes
+  apt_repository:
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+    filename: kubernetes.io
+    mode: 666
+
+- name: Install Kubernetes binaries
+  apt: 
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - kubelet 
+      - kubeadm 
+      - kubectl

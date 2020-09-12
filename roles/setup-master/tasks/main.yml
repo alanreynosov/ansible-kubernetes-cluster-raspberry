@@ -1,0 +1,55 @@
+---
+# tasks file for roles/setup-master
+- name: reset kubeadm
+  command: kubeadm reset -f
+  when: kube_reset|default(false)|bool==true 
+
+- name: Check if /etc/kubernetes/admin.conf
+  stat:
+    path: /etc/kubernetes/admin.conf
+  register: admin_conf
+
+- name: Initialize the Kubernetes cluster using kubeadm
+  command: kubeadm init --pod-network-cidr={{ network }}/16 --service-cidr={{ network }}/24
+  when: admin_conf.stat.exists == False #if is already configured do nothing on next run
+
+- name: Create .Kube Directory
+  file:
+    path: "/home/{{ansible_ssh_user}}/.kube"
+    state: directory
+    mode: '0755'
+
+- name: Copy Kubectl Config to home user
+  copy:
+    remote_src: yes
+    src: /etc/kubernetes/admin.conf
+    dest: /home/{{ansible_ssh_user}}/.kube/config
+    owner: "{{ansible_ssh_user}}"
+    group: "{{ansible_ssh_user}}"
+    
+- name: Install flannel pod network
+  become: false
+  command: "{{ item }}"
+  with_items:
+    - kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
+    - kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+- name: Deploy Dashboard UI
+  become: false
+  command: "{{ item }}"
+  with_items:
+    - kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml 
+    - kubectl create serviceaccount dashboard-admin-sa
+    - kubectl create clusterrolebinding dashboard-admin-sa --clusterrole=cluster-admin --serviceaccount=default:dashboard-admin-sa
+  ignore_errors: yes
+  when: deploy_dashboard|default(false)|bool==true #install kubernetes dashboard
+
+- name: Generate join command
+  become: false
+  command: kubeadm token create --print-join-command
+  register: join_command
+
+#will place join command file in roles/setup-nodes/ for non-master nodes join to the cluster
+- name: Copy join command to local file
+  become: false
+  local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./roles/setup-nodes/files/join-command" mode=666

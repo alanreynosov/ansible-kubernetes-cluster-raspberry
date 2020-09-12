@@ -1,0 +1,12 @@
+---
+  - hosts: master
+    become: true
+    roles:
+      - bootstrap-node
+      - setup-master
+
+  - hosts: nodes
+    become: true
+    roles:
+      - bootstrap-node
+      - setup-nodes

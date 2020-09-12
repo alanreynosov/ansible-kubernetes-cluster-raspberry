@@ -1,0 +1,4 @@
+---
+# vars file for roles/setup-nodes
+vars:
+    kube_reset: "{{ kube_reset }}"

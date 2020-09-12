@@ -1,0 +1,15 @@
+---
+# defaults file for roles/hardenize-node
+harden_linux_deploy_user_uid: 9999
+harden_linux_deploy_user_shell: "/bin/bash"
+harden_linux_ntp_settings:
+  "^servers 0": "servers 0.debian.pool.ntp.org"
+  "^servers 1": "servers 1.debian.pool.ntp.org"
+  "^servers 2": "servers 2.debian.pool.ntp.org"
+  "^servers 3": "servers 3.debian.pool.ntp.org"
+harden_linux_sshd_settings:
+  "^PasswordAuthentication": "PasswordAuthentication no"  # Disable password authentication
+  "^PermitRootLogin": "PermitRootLogin no"                # Disable SSH root login
+  "^PermitTunnel": "PermitTunnel no"                      # Disable tun(4) device forwarding
+  "^Port ": "Port 22"                                     # Set SSHd port
+  

@@ -1,0 +1,15 @@
+---
+# tasks file for roles/setup-nodes
+
+- name: reset kubeadm
+  command: kubeadm reset -f
+  when: kube_reset|default(false)|bool==true
+
+- name: Check if /etc/kubelet.conf
+  stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet_conf
+
+- name: Join Node to Cluster
+  script: join-command
+  when: kubelet_conf.stat.exists == False

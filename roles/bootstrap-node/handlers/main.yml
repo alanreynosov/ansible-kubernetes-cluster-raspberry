@@ -1,0 +1,29 @@
+---
+# handlers file for roles/hardenize-node
+- name: restart ssh
+  service:
+    name: ssh
+    state: restarted
+
+- name: restart ntpd
+  service:
+    name: "{{ harden_linux_ntp }}"
+    state: restarted
+
+- name: Enable Docker
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Enable Docker Service  
+  service:
+    name: docker.service
+    enabled: yes
+
+- name: Reboot
+  reboot:
+    msg: "Reboot initiated by Ansible"
+    # connect_timeout: 5
+    # post_reboot_delay: 30
+    # test_command: whoami

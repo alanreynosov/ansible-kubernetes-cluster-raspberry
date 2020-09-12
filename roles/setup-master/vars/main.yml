@@ -1,0 +1,5 @@
+---
+# vars file for roles/setup-master
+vars:
+    kube_reset: "{{ kube_reset }}"
+    deploy_dashboard: "{{ deploy_dashboard }}"
