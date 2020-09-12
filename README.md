@@ -1,5 +1,32 @@
 # Ansible Playbook to Setup a Kubernetes Cluster on Raspberry Pi 4
 
+This playbook will deploy and configure a kubernetes dashboard on a **raspberry pi 4B**, but it could run over any device running **Ubuntu 20.04**
+
+What this playbook will do?
+
+1. Remove root password if exists
+2. Remove password authentication
+3. Add all hosts in inventory to /etc/hosts
+4. Change Hostname as defined in inventory file
+5. Configure NTP settings
+6. Update and Upgrade APT and install Aptitude
+7. Install and enable if required following packages
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg-agent
+    - software-properties-common
+    - docker.io
+    - kubedm
+    - kubelet
+    - kubectl
+8. Enable CGROUP Memory and Reboot once
+9. Setup kubernetes master node as defined in inventory file
+10. Setup kubernetes worker nodes as defined in inventory file
+
+Optionally you can reset the kubernetes cluster setup
+This playbook has been developed for testing purposes in dev enviroments, it is not for production purposes, however feel free to add as many tasks you want to make sure if fits to your purposes
+
 ## Prerequisites
 * Nodes prepared with ssh keys for authentication
 
