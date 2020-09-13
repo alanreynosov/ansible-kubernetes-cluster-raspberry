@@ -1,6 +1,6 @@
 # Ansible Playbook to Setup a Kubernetes Cluster on Raspberry Pi 4
 
-This playbook will deploy and configure a kubernetes dashboard on a **raspberry pi 4B**, but it could run over any device running **Ubuntu 20.04**
+This playbook will deploy and configure a kubernetes cluster on a **raspberry pi 4B**, but it could work over any device running **Ubuntu 20.04**
 
 What this playbook will do?
 
@@ -25,7 +25,7 @@ What this playbook will do?
 10. Setup kubernetes worker nodes as defined in inventory file
 
 Optionally you can reset the kubernetes cluster setup
-This playbook has been developed for testing purposes in dev enviroments, it is not for production purposes, however feel free to add as many tasks you want to make sure if fits to your purposes
+This playbook has been developed for testing purposes in dev enviroments, it is not intended to run for production, however feel free to add as many tasks you want to make sure if fits to your purposes
 
 ## Prerequisites
 * Nodes prepared with ssh keys for authentication
